@@ -93,9 +93,6 @@ userdel -r <username>
 #7.15
 #If any users have .rhosts files determine why they have them. These files should be deleted if they are not needed.
 #To search for and remove .rhosts files by using the find(1) command
-
-find home-directories -name .rhosts -print -exec rm{}
-E.g. 
 find /export/home -name .rhosts -print | xargs -i -t rm{}
 
 #7.16
