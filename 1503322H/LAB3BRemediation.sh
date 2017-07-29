@@ -93,7 +93,7 @@ printf "It is recommended that a monitoring policy be established to report user
 find /export/home -name .rhosts -print | xargs -i -t rm{}
 
 #7.16
-#Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found.
+printf "Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
 
 #7.17
 #If any users' home directories do not exist, create them and make sure the respective user owns the directory. 
