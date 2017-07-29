@@ -79,16 +79,13 @@ userdel -r <username>
 - path entries should preferably be owned by root (use the chown command to rectify)
 
 #7.12
-#Making global modifications to user home directories without alerting the user community can result in unexpected outages and unhappy users. 
-#Therefore, it is recommended that a monitoring policy be established to report user file permissions and determine the action to be taken in accordance with site policy.
+printf "It is recommended that a monitoring policy be established to report user file permissions."
 
 #7.13
-#Making global modifications to users' files without alerting the user community can result in unexpected outages and unhappy users. 
-#Therefore, it is recommended that a monitoring policy be established to report user dot file permissions and determine the action to be taken in accordance with site policy.
+printf "It is recommended that a monitoring policy be established to report user dot file permissions."
 
 #7.14
-#Making global modifications to users' files without alerting the user community can result in unexpected outages and unhappy users. 
-#Therefore, it is recommended that a monitoring policy be established to report users’ use of .netrc and .netrc file permissions and determine the action to be taken in accordance with site policy.
+printf "It is recommended that a monitoring policy be established to report users’ use of .netrc and .netrc file permissions."
 
 #7.15
 #If any users have .rhosts files determine why they have them. These files should be deleted if they are not needed.
