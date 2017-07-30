@@ -155,7 +155,7 @@ chown root:root /etc/issue; chmod 644 /etc/issue
 chown root:root /etc/issue.net; chmod 644 /etc/issue.net
 
 #8.2
-printf "Edit the /etc/motd, /etc/issue and /etc/issue.net files and remove any lines containing \m, \r, \s or \v."
+printf "1mEdit the /etc/motd, /etc/issue and /etc/issue.net files and remove any lines containing \m, \r, \s or \v."
 issue=$(egrep '(\\v|\\r|\\m|\\s)' /etc/issue)
 motd=$(egrep '(\\v|\\r|\\m|\\s)' /etc/motd)
 issuenet=$(egrep '(\\v|\\r|\\m|\\s)' /etc/issue.net)
