@@ -8,10 +8,7 @@ maxDays=$(grep ^PASS_MAX_DAYS /etc/login.defs | grep -o '[0-9]*')
 if [ $maxDays -le 90 ]; then
 	printf "\e[32m$maxDays Pass\e[0m\n"
 else
-	printf "\e[31m$maxDays Fail\e[0m\n"
-	#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
-	sudo nano /etc/login.defs
-	PASS_MAX_DAYS 90
+	sed -i 's,^\(PASS_MAX_DAYS=\).*,\1'90',' /etc/login.defs
 fi
 #Gets existing users
 USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
@@ -23,58 +20,142 @@ do
 	day=$(chage -l $i | grep "Maximum number" | cut -d : -f 2)
 	if [ $day -le 90 ]; then 
 		printf "\e[32m$i $day Pass\e[0m\n"
+                      printf “Remediation completed\n”
 	else
-		#Modify user parameters for all users with a password set to match
-		printf "\e[31m$i $day Fail\e[0m\n"
-		chage --maxdays 90 <user>
+		chage --maxdays 90 $i   
 	fi
 done
 
 #7.2 
-#Set the PASS_MIN_DAYS parameter to 7 in /etc/login.defs
-sudo nano /etc/login.defs
-
-#Modify user parameters for all users with a password set to match: 
-chage --mindays 7 <user>
+printf "\n \033[0;30m${bold}7.2 Set Password Change Minimum Number of Days${normal} \n\n"
+#Checks the defaults for password min days, only gets the numbers
+printf "Checking user account defaults: (Password Min Days)\n"
+minDays=$(grep ^PASS_MIN_DAYS /etc/login.defs | grep -o '[0-9]*')
+if [ $minDays -ge 7 ]; then
+	printf "\e[32m$minDays Pass\e[0m\n"
+else
+	sed -i 's,^\(PASS_MIN_DAYS=\).*,\1'7',' /etc/login.defs
+fi
+#Gets existing users
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+printf "Checking existing user accounts: (Password Min Days)\n"
+#For loop through each existing user to check min days
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "Minimum number" | cut -d : -f 2)
+	if [ $day -ge 7 ]; then 
+		printf "\e[32m$i $day Pass\e[0m\n"
+	else
+		chage --mindays 7 $i  
+	fi
+done
 
 #7.3
-#Set the PASS_WARN_AGE parameter to 7 in /etc/login.defs: 
-sudo nano /etc/login.defs
-
-#Modify user parameters for all users with a password set to match: 
-chage --warndays 7 <user>
+printf "\n \033[0;30m${bold}7.3 Set Password Expiring Warning Days${normal} \n\n"
+printf "Checking user account defaults: (Password Exp Warning Days)\n"
+#Checks the defaults for password expiring warning days, only gets the numbers
+expDays=$(grep ^PASS_WARN_AGE /etc/login.defs | grep -o '[0-9]*')
+if [ $expDays -ge 7 ]; then
+	printf "\e[32m$expDays Pass\e[0m\n"
+else
+	sed -i 's,^\(PASS_WARN_DAYS=\).*,\1'7',' /etc/login.defs
+fi
+#Gets existing users
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+printf "Checking existing user accounts: (Password Exp Warning Days)\n"
+#For loop through each existing user to check password expiring warning days
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "warning" | cut -d : -f 2)
+	if [ $day -ge 7 ]; then 
+		printf "\e[32m$i $day Pass\e[0m\n"
+	else
+		chage --warndays 7 <user>
+	fi
+done
 
 #7.4
-#Execute the following commands for each misconfigured system account,
-usermod -L <user name>
-usermod -s /sbin/nologin <user name> 
+printf "\n \033[0;30m${bold}7.4 Disable User Accounts${normal} \n\n"
+#Checks that users with UID of <1000, not named "sync", "shutdown", "halt" and "root" are locked and shells are set to /sbin/nologin
+RESULT=$(egrep -v "^\+" /etc/passwd | awk -F: '($1!="root" && $1!="sync" && $1!="shutdown" && $1!="halt" && $3<1000 && $7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false")')
+if [ -z $RESULT ]; then
+  printf "\e[32mSuccessful\e[0m\n"
+else
+  usermod -L $RESULT
+  usermod -s /sbin/nologin $RESULT
+fi
 
 #7.5
-#Run the following command to set the root user default group to GID 0: 
-usermod -g 0 root
+printf "\n \033[0;30m${bold}7.5 Set Default Group for root Account${normal} \n\n"
+printf "Checking for root's default group\n"
+#Checks whether GID = 0
+DGROUP=$(grep "^root:" /etc/passwd | cut -f4 -d:)
+if [ "$DGROUP" -eq 0 ]; then
+	printf "\033[33;32m PASS \n"
+else
+	usermod -g 0 root
+fi
+echo  -en "\e[0m"
 
 #7.6
-#Edit the /etc/bashrc and /etc/profile.d/cis.sh files (and the appropriate files for any other shell supported on your system) and add the following the UMASK parameter as shown:
-umask 077
+printf "\n \033[0;30m${bold}7.6 Set Default umask for Users${normal} \n\n"
+printf "Checking umask for users\n "
+#Checks if Umask is set to 077
+if grep "umask 077" /etc/bashrc | grep "umask 077" /etc/profile.d/* >/dev/null; then
+	printf "\033[33;32mPASSED, umask is already set to 077. \n"
+else
+	sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/bashrc
+           sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/profile.d
+fi 
+echo  -en "\e[0m"
 
 #7.7
-#Run the following command to disable accounts that are inactive for 35 or more days
-useradd -D -f 35
+printf "\n \033[0;30m${bold}7.7 Lock Inactive User Accounts${normal} \n\n"
+#Checks if Inactive Days are more than or equal to 35
+printf "Checking for days until accounts deactivates\n"
+if useradd -D | grep INACTIVE=35 >/dev/null; then
+	printf "\033[33;32m PASS \n"
+else
+	useradd -D -f 35
+fi
+echo  -en "\e[0m"
 
 #7.8
-#If any accounts in the /etc/shadow file do not have a password, run the following command to lock the account until it can be determined why it does not have a password
-/usr/bin/passwd -l <username>
-#Also, check to see if the account is logged in and investigate what it is being used for to determine if it needs to be forced off. 
+printf "\n \033[0;30m${bold}7.8 Ensure Password Fields are Not Empty${normal} \n\n"
+#Verifies that there are no accounts with empty password fields
+printf "Checking that password fields are not empty"
+PFieldsNEmpty= $(cat /etc/shadow | awk -F: '($2 == "" ) { print $1 " does not have a password "}')
+echo $PFieldsNEmpty
+if [ -z "$PFieldsNEmpty" ]; then
+	printf "\033[33;32m PASS \n"
+else
+	/usr/bin/passwd -l $1
+fi
+echo  -en "\e[0m"
 
 #7.9
-#Run the following command and verify that no output is returned:
-grep '^+:' /etc/passwd
-grep '^+:' /etc/shadow
-grep ‘^+:’ /etc/group
-#Delete these entries if they exist using userdel.
-
 #This script will give the information of legacy account.
-LG=$(grep '^+:' /etc/passwd) #if they're in passwd, they're a user
+LG=$(grep '^+:' /etc/passwd) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
+LG=$(grep '^+:' /etc/shadow) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
+LG=$(grep '^+:' /etc/group) 
 if [$? -eq 0]; then 
     #We've found a user
     echo "We've found the user '+'!"
@@ -85,50 +166,98 @@ else
 fi
 
 #7.10
-#Run the following command and verify that only the word "root" is returned:
-/bin/cat /etc/passwd | /bin/awk -F: '($3 == 0) { print $1 }‘
-root
-
-#Delete any other entries that are displayed using userdel
-userdel -r <username>
+printf "\n \033[0;30m${bold}7.10 Verify No UID 0 Accounts Exist Other Than root${normal} \n\n"
+#Checks that only root has UID of 0
+printf "Checking that no UID 0 exist besides root\n"
+VerifyUIDRoot=$(/bin/cat /etc/passwd | /bin/awk -F: '($3 == 0){print $1}')
+if [ "$VerifyUIDRoot" = 'root' ]
+then
+	printf "\033[33;32m PASS \n"
+else
+	userdel -r [ “$VerifyUIDRoot” != ‘root’ ]
+fi
+echo  -en "\e[0m"
 
 #7.11
-#Rectify or justify any questionable entries found in the path.
-- none of the path entries should be empty
-- none of the path entries should be the “.” (current directory)
-- path entries should be directories
-- path entries should only be writable by the owner (use the chmod command to rectify)
-- path entries should preferably be owned by root (use the chown command to rectify)
+printf "\n \033[0;30m${bold}7.11 Ensure root PATH Integrity${normal} \n\n"
+#Checks that none of the path entries are empty
+printf "Checking root path integrity\n"
+if [ "`echo $PATH | grep :: `" != "" ]; then
+	echo "Empty Directory in PATH (::)"
+fi
+#Checks that none of the path entries is a '.'
+p=`echo $PATH | sed -e 's/::/:/' -e 's/:$//' -e 's/:/ /g'`
+set -- $p
+while [ "$1" != "" ]; do
+	if [ "$1" = "." ]; then
+		echo "PATH contains ."
+		shift
+		continue
+	fi
+#Checks that 6th and 9th character of permissions are not 'w'
+	if [ -d $1 ]; then
+		perm6=$(ls -ldH $1 | grep "^.....w....")
+		perm9=$(ls -ldH $1 | grep "^........w.")
+		if [ -z "$perm6" ]; then
+			printf "\e[32mPass - Group Write permission not set on directory $1\e[0m\n"
+		else
+			printf "\e[31mFail - Group Write permission set on directory $1\e[0m\n"
+			chmod g=rx /root
+		fi
+		if [ -z "$perm9" ]; then
+			printf "\e[32mPass - Other Write permission not set on directory $1\e[0m\n"
+		else
+			printf "\e[31mFail - Other Write permission set on directory $1\e[0m\n"
+			chmod o= /root
+		fi
+#Checks if owner is root
+		dirown=`ls -ldH $1 | awk '{print $3}'`
+		if [ "$dirown" == "root" ] ; then
+			printf "\e[32mPass - $1 is owned by root\e[0m\n\n"
+		else
+			printf "\e[31mFail - $1 is not owned by root\e[0m\n"
+			chown root /root
+		fi
+	else
+		printf "\e[31m$1 is not a directory\e[0m\n"
+	fi
+shift
+done
 
 #7.12
 printf "\n \033[0;30m${bold}7.12 Check Permissions on User Home Directories${normal} \n\n"
+#For loop to get accounts that can log in interactively to the system
 for RESULT in `cat /etc/passwd | egrep -v '(root|halt|sync|shutdown)' |awk -F: '($7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false") { print $6 }'`; do
 resultperm=$(ls -ld $RESULT)
+#Checks that 6th character of permissions is not 'w'
 if [[ ` echo $resultperm | grep "^......w..." ` ]]; then 
 	echo "Fail, Group Write permission is set on directory $RESULT"
 else
 	echo "Pass, Group Write permission is not set on directory $RESULT"
+           chmod g= $RESULT
 fi
 #Checks that 8th character of permissions is '-'
 if [[ ` echo $resultperm | grep "^.......-.." `  ]]; then
 	echo "Pass, Other Read permission is not set on directory $RESULT"
 else
 	echo "Fail, Other Read permission is set on directory $RESULT"
+           chmod o= $RESULT
 fi
 #Checks that 9th character of permissions is '-'
 if [[ `echo $resultperm | grep "^........-."` ]]; then
 	echo "Pass, Other Write permission is not set on directory $RESULT"
 else
 	echo "Fail, Other Write permission is set on directory $RESULT"
+           chmod o= $RESULT
 fi
 #Check that 10th character of permissions is '-'
 if [[ `echo $resultperm | grep "^.........-"` ]]; then
 	echo "Pass, Other Execute permission is not set on directory $RESULT"
 else
 	echo "Fail, Other Execute permission is set on directory $RESULT"
+           chmod o= $RESULT
 fi
 done
-printf "It is recommended that a monitoring policy be established to report user file permissions."
 
 #7.13
 printf "\n \033[0;30m${bold}7.13 Check User Dot File Permissions${normal} \n\n"
