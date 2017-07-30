@@ -9,7 +9,7 @@ else
 	sed -i 's,^\(PASS_MAX_DAYS=\).*,\1'90',' /etc/login.defs
     printf "\e[Remediation has been completed\e[0m\n"
 fi
-printf "1mSeting Password Expiration Days for all users: "
+printf "1mSetting Password Expiration Days for all users: "
 USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
 list=(${USER})
 for i in "${list[@]}"
