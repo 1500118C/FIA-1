@@ -79,32 +79,125 @@ userdel -r <username>
 - path entries should preferably be owned by root (use the chown command to rectify)
 
 #7.12
+printf "\n \033[0;30m${bold}7.12 Check Permissions on User Home Directories${normal} \n\n"
+for RESULT in `cat /etc/passwd | egrep -v '(root|halt|sync|shutdown)' |awk -F: '($7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false") { print $6 }'`; do
+resultperm=$(ls -ld $RESULT)
+if [[ ` echo $resultperm | grep "^......w..." ` ]]; then 
+	echo "Fail, Group Write permission is set on directory $RESULT"
+else
+	echo "Pass, Group Write permission is not set on directory $RESULT"
+fi
+#Checks that 8th character of permissions is '-'
+if [[ ` echo $resultperm | grep "^.......-.." `  ]]; then
+	echo "Pass, Other Read permission is not set on directory $RESULT"
+else
+	echo "Fail, Other Read permission is set on directory $RESULT"
+fi
+#Checks that 9th character of permissions is '-'
+if [[ `echo $resultperm | grep "^........-."` ]]; then
+	echo "Pass, Other Write permission is not set on directory $RESULT"
+else
+	echo "Fail, Other Write permission is set on directory $RESULT"
+fi
+#Check that 10th character of permissions is '-'
+if [[ `echo $resultperm | grep "^.........-"` ]]; then
+	echo "Pass, Other Execute permission is not set on directory $RESULT"
+else
+	echo "Fail, Other Execute permission is set on directory $RESULT"
+fi
+done
 printf "It is recommended that a monitoring policy be established to report user file permissions."
 
 #7.13
-printf "It is recommended that a monitoring policy be established to report user dot file permissions."
+printf "\n \033[0;30m${bold}7.13 Check User Dot File Permissions${normal} \n\n"
+#For loop to get hidden files in the user's home directory
+printf "Checking user dot file permissions\n"
+for dir in `cat /etc/passwd | egrep -v '(root|sync|halt|shutdown)' | awk -F: '($7 != "/sbin/nologin" && $7 != "/usr/sbin/nologin" && $7 != "/bin/false") { print $6 }'`; do
+for file in $dir/.[A-Za-z0-9]*; do
+#Checks that 6th and 9th character of permissions are not 'w'
+perm6=$(ls -ld $file | grep "^.....w....")
+perm9=$(ls -ld $file | grep "^........w.")
+if [ -z "$perm6" ] && [ -z "$perm9" ]; then
+	printf "\e[32mPass - $file\e[0m\n"
+else
+	printf "\e[31mFail - $file\e[0m\n"
+	printf "It is recommended that a monitoring policy be established to report user dot file permissions.\n"
+fi
+done
+done
 
 #7.14
+printf "\n \033[0;30m${bold}7.14 Checking for Existence and Permission of User .netrc Files${normal} \n\n" 
+
+#Determines the home directory of interactive user accounts
+for dir in `/bin/cat /etc/passwd | /bin/egrep -v '(root|halt|sync|shutdown)' |/bin/awk -F: '($7 != "/sbin/nologin") { print $6 }'`; do
+
+#Searches the home directory of interactive user accounts for .netrc file
+for file in $dir/.netrc; do
+if [ ! -h "$file" -a -f "$file" ]; then
+printf "\033[33;30m Found! .netrc file found in directory $dir, checking file permissions... \n"
+else
+printf "\033[33;35m No .netrc file found in directory $dir. \n"
+fi
 printf "It is recommended that a monitoring policy be established to report users’ use of .netrc and .netrc file permissions."
 
 #7.15
 #If any users have .rhosts files determine why they have them. These files should be deleted if they are not needed.
 #To search for and remove .rhosts files by using the find(1) command
+printf "\n \033[0;30m${bold}7.15 Check for Presence of User .rhosts Files${normal} \n\n"
+#Get interactive user accounts
+printf "\033[0;30mChecking for Presence of User .rhosts Files \n"
+for dir in `/bin/cat /etc/passwd | /bin/egrep -v '(root|halt|sync|shutdown)' |/bin/awk -F: '($7 != "/sbin/nologin") { print $6 }'`; do
+#For loop to see if rhost file exists in user's home directory
+for file in $dir/.rhosts; do
+#Checks if rhosts file is needed
+if [ ! -h "$file" -a -f "$file" ]; then
+printf "\033[33;31m.rhosts file found in $dir, please delete file if it is not needed. \n"
 find /export/home -name .rhosts -print | xargs -i -t rm{}
+else
+printf "\033[33;32mNo .rhosts file found in $dir \n"
+fi
+echo  -en "\e[0m"
+done
+done
 
 #7.16
+printf "\n \033[0;30m${bold}7.16 Check Groups in /etc/passwd${normal} \n\n"
+#For every row in /etc/passwd
+for i in $(cat /etc/passwd | cut -d : -f 4 | sort -u); do 
+#Verifies GID defined in /etc/group
+	grep -q -P "^.*?:x:$i:" /etc/group
+		if [ $? -ne 0 ]; then 
+			echo "Group $i is referenced by /etc/passwd but does not exists in /etc/group"
+		else
+			printf "\e[32mPass - Group: $i\e[0m\n"
+		fi
+done
 printf "Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
 
 #7.17
 #If any users' home directories do not exist, create them and make sure the respective user owns the directory. 
 #Users without assigned home directories should be removed or assigned a home directory as appropriate. 
-
-useradd john
-mkdir -p /home/john
-chown john:john /home/john
-
-#To remove users
-userdel john
+printf "\n \033[0;30m${bold}7.17 Check That Users Are Assigned Valid Home Directories and Home Directory Ownership is Correct${normal} \n\n"
+#In etc/passwd, check if home directory is defined in field no. 6. See if valid and exist
+cat /etc/passwd | awk -F : '{print $1, $3, $6}' | while read user uid dir; do 
+	if [ $uid -ge 1000 -a ! -d "$dir" -a $user != "nfsnobody" ]; then 
+		printf "\e[31mHome directory ($dir) of user $user does not exist.\e[0m\n"
+	elif [ ! -d $dir ] ; then
+		printf "\e[31mHome Directory of $user cannot be found!\e[0m\n"
+	else 
+		printf "\e[32mPass - $user $dir\e[0m\n"
+		echo "Checking if Home directory ownership of $user is correct"
+		ls -ld $dir | awk '{print $3, $4}' | while read owner user1; do
+		if [ "$owner" != "$user1" ] && [ $? -eq 0 ]; then
+			printf "\e[31mThe home directory ($dir) of user $user1 is owned by $owner.\e[0m\n"
+		else 
+			printf "\e[32mPass\e[0m\n"
+            userdel $user1
+		fi
+		done
+	fi
+done
 
 #7.18
 #Based on the results of the script, establish unique UIDs and review all files owned by the shared UID to determine which UID they are supposed to belong to.
