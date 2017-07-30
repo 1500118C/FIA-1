@@ -72,7 +72,7 @@ do
 	if [ $day -ge 7 ]; then 
 		printf "\e[32m$i $day Pass\e[0m\n"
 	else
-		chage --warndays 7 <user>
+		chage --warndays 7 $i
 	fi
 done
 
