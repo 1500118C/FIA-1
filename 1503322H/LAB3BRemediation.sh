@@ -9,7 +9,8 @@ if [ $maxDays -le 90 ]; then
 	printf "\e[32m$maxDays Pass\e[0m\n"
 else
 	printf "\e[31m$maxDays Fail\e[0m\n"
-	printf "Please run remediation\n"
+	sudo nano /etc/login.defs
+	PASS_MAX_DAYS 90
 fi
 #Gets existing users
 USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
@@ -24,8 +25,6 @@ do
 	else
 		#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
 		printf "\e[31m$i $day Fail\e[0m\n"
-		sudo nano /etc/login.defs
-		PASS_MAX_DAYS 90
 	fi
 done
 
