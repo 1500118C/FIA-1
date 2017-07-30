@@ -1,9 +1,33 @@
 #!/bin/bash
 
 #7.1
-#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
-sudo nano /etc/login.defs
-PASS_MAX_DAYS 90
+printf "\n \033[0;30m${bold}7.1 Set Password Expiration Days${normal} \n\n"
+printf "Checking user account defaults: (Password Max Days)\n"
+#Checks the defaults for password max days, only gets the numbers
+maxDays=$(grep ^PASS_MAX_DAYS /etc/login.defs | grep -o '[0-9]*')
+if [ $maxDays -le 90 ]; then
+	printf "\e[32m$maxDays Pass\e[0m\n"
+else
+	printf "\e[31m$maxDays Fail\e[0m\n"
+	printf "Please run remediation\n"
+fi
+#Gets existing users
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+printf "Checking existing user accounts: (Password Max Days)\n"
+#For loop through each existing user to check max days
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "Maximum number" | cut -d : -f 2)
+	if [ $day -le 90 ]; then 
+		printf "\e[32m$i $day Pass\e[0m\n"
+	else
+		#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
+		printf "\e[31m$i $day Fail\e[0m\n"
+		sudo nano /etc/login.defs
+		PASS_MAX_DAYS 90
+	fi
+done
 
 #Modify user parameters for all users with a password set to match
 chage --maxdays 90 <user>
