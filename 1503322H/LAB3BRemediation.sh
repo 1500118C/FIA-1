@@ -9,6 +9,7 @@ if [ $maxDays -le 90 ]; then
 	printf "\e[32m$maxDays Pass\e[0m\n"
 else
 	printf "\e[31m$maxDays Fail\e[0m\n"
+	#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
 	sudo nano /etc/login.defs
 	PASS_MAX_DAYS 90
 fi
@@ -23,13 +24,11 @@ do
 	if [ $day -le 90 ]; then 
 		printf "\e[32m$i $day Pass\e[0m\n"
 	else
-		#Set the PASS_MAX_DAYS parameter to 90 in /etc/login.defs
+		#Modify user parameters for all users with a password set to match
 		printf "\e[31m$i $day Fail\e[0m\n"
+		chage --maxdays 90 <user>
 	fi
 done
-
-#Modify user parameters for all users with a password set to match
-chage --maxdays 90 <user>
 
 #7.2 
 #Set the PASS_MIN_DAYS parameter to 7 in /etc/login.defs
