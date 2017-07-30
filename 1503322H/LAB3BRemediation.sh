@@ -68,6 +68,7 @@ fi
 root
 #Delete any other entries that are displayed using userdel
 userdel -r <username>
+
 #7.11
 #Rectify or justify any questionable entries found in the path.
 - none of the path entries should be empty
@@ -75,18 +76,24 @@ userdel -r <username>
 - path entries should be directories
 - path entries should only be writable by the owner (use the chmod command to rectify)
 - path entries should preferably be owned by root (use the chown command to rectify)
+
 #7.12
 printf "It is recommended that a monitoring policy be established to report user file permissions."
+
 #7.13
 printf "It is recommended that a monitoring policy be established to report user dot file permissions."
+
 #7.14
 printf "It is recommended that a monitoring policy be established to report users’ use of .netrc and .netrc file permissions."
+
 #7.15
 #If any users have .rhosts files determine why they have them. These files should be deleted if they are not needed.
 #To search for and remove .rhosts files by using the find(1) command
 find /export/home -name .rhosts -print | xargs -i -t rm{}
+
 #7.16
 printf "Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
+
 #7.17
 #If any users' home directories do not exist, create them and make sure the respective user owns the directory. 
 #Users without assigned home directories should be removed or assigned a home directory as appropriate. 
