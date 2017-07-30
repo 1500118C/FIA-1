@@ -7,7 +7,7 @@ if [ $maxDays -le 90 ]; then
 	printf "\e[No remediation is needed\e[0m\n"
 else
 	sed -i 's,^\(PASS_MAX_DAYS=\).*,\1'90',' /etc/login.defs
-    printf "\e[Remediation has been completed\e[0m\n"
+        printf "\e[Remediation has been completed\e[0m\n"
 fi
 printf "1mSetting Password Expiration Days for all users: "
 USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
@@ -19,58 +19,130 @@ do
 		printf "\e[No remediation is needed\e[0m\n"
 	else
 		chage --maxdays 90 $i   
-        printf "\e[Remediation has been completed\e[0m\n"
+                printf "\e[Remediation has been completed\e[0m\n"
 	fi
 done
 
-#Modify user parameters for all users with a password set to match
-chage --maxdays 90 <user>
-
 #7.2 
-#Set the PASS_MIN_DAYS parameter to 7 in /etc/login.defs
-sudo nano /etc/login.defs
-
-#Modify user parameters for all users with a password set to match: 
-chage --mindays 7 <user>
+printf "1mSetting Password Change Minumum Days on /etc/login.defs: "
+minDays=$(grep ^PASS_MIN_DAYS /etc/login.defs | grep -o '[0-9]*')
+if [ $minDays -ge 7 ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(PASS_MIN_DAYS=\).*,\1'7',' /etc/login.defs
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+printf "1mSetting Password Change Minimum Days for all users: "
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "Minimum number" | cut -d : -f 2)
+	if [ $day -ge 7 ]; then 
+		printf "\e[No remediation is needed\e[0m\n"
+	else
+		chage --mindays 7 $i  
+		printf "\e[Remediation has been completed\e[0m\n"
+	fi
+done
 
 #7.3
-#Set the PASS_WARN_AGE parameter to 7 in /etc/login.defs: 
-sudo nano /etc/login.defs
-
-#Modify user parameters for all users with a password set to match: 
-chage --warndays 7 <user>
+printf "1mSetting Password Expiring Warning Days on /etc/login.defs: "
+expDays=$(grep ^PASS_WARN_AGE /etc/login.defs | grep -o '[0-9]*')
+if [ $expDays -ge 7 ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(PASS_WARN_DAYS=\).*,\1'7',' /etc/login.defs
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+printf "1mSetting Password Expiring Warning Days for all users: "
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "warning" | cut -d : -f 2)
+	if [ $day -ge 7 ]; then 
+		printf "\e[No remediation is needed\e[0m\n"
+	else
+		chage --warndays 7 $i
+		printf "\e[Remediation has been completed\e[0m\n"
+	fi
+done
 
 #7.4
-#Execute the following commands for each misconfigured system account,
-usermod -L <user name>
-usermod -s /sbin/nologin <user name> 
+printf "1mDisabling system accounts: "
+RESULT=$(egrep -v "^\+" /etc/passwd | awk -F: '($1!="root" && $1!="sync" && $1!="shutdown" && $1!="halt" && $3<1000 && $7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false")')
+if [ -z $RESULT ]; then
+  printf "\e[No remediation is needed\e[0m\n"
+else
+  usermod -L $RESULT
+  usermod -s /sbin/nologin $RESULT
+  printf "\e[Remediation has been completed\e[0m\n"
+fi
 
 #7.5
-#Run the following command to set the root user default group to GID 0: 
-usermod -g 0 root
+printf "1mSetting default group for root account: "
+DGROUP=$(grep "^root:" /etc/passwd | cut -f4 -d:)
+if [ "$DGROUP" -eq 0 ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	usermod -g 0 root
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
 
 #7.6
-#Edit the /etc/bashrc and /etc/profile.d/cis.sh files (and the appropriate files for any other shell supported on your system) and add the following the UMASK parameter as shown:
-umask 077
+printf "1mSetting default mask for users: "
+if grep "umask 077" /etc/bashrc | grep "umask 077" /etc/profile.d/* >/dev/null; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/bashrc
+        sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/profile.d
+	printf "\e[Remediation has been completed\e[0m\n"
+fi 
 
 #7.7
-#Run the following command to disable accounts that are inactive for 35 or more days
-useradd -D -f 35
+printf "1mLocking inactive user accounts: "
+if useradd -D | grep INACTIVE=35 >/dev/null; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	useradd -D -f 35
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
 
 #7.8
-#If any accounts in the /etc/shadow file do not have a password, run the following command to lock the account until it can be determined why it does not have a password
-/usr/bin/passwd -l <username>
-#Also, check to see if the account is logged in and investigate what it is being used for to determine if it needs to be forced off. 
+printf "1mEnsuring password fields are not empty: "
+PFieldsNEmpty= $(cat /etc/shadow | awk -F: '($2 == "" ) { print $1 " does not have a password "}')
+echo $PFieldsNEmpty
+if [ -z "$PFieldsNEmpty" ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	/usr/bin/passwd -l $1
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
 
 #7.9
-#Run the following command and verify that no output is returned:
-grep '^+:' /etc/passwd
-grep '^+:' /etc/shadow
-grep ‘^+:’ /etc/group
-#Delete these entries if they exist using userdel.
+printf "1mVerifying No Legacy "+" Entries Exist in /etc/passwd, /etc/shadow and /etc/group files: "
+LG=$(grep '^+:' /etc/passwd) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
 
-#This script will give the information of legacy account.
-LG=$(grep '^+:' /etc/passwd) #if they're in passwd, they're a user
+LG=$(grep '^+:' /etc/shadow) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
+
+LG=$(grep '^+:' /etc/group) 
 if [$? -eq 0]; then 
     #We've found a user
     echo "We've found the user '+'!"
@@ -81,22 +153,92 @@ else
 fi
 
 #7.10
-#Run the following command and verify that only the word "root" is returned:
-/bin/cat /etc/passwd | /bin/awk -F: '($3 == 0) { print $1 }‘
-root
-#Delete any other entries that are displayed using userdel
-userdel -r <username>
+printf "1mVerify No UID 0 Accounts Exist Other Than root: "
+VerifyUIDRoot=$(/bin/cat /etc/passwd | /bin/awk -F: '($3 == 0){print $1}')
+if [ "$VerifyUIDRoot" = 'root' ]
+then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	userdel -r [ “$VerifyUIDRoot” != ‘root’ ]
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
 
 #7.11
-#Rectify or justify any questionable entries found in the path.
-- none of the path entries should be empty
-- none of the path entries should be the “.” (current directory)
-- path entries should be directories
-- path entries should only be writable by the owner (use the chmod command to rectify)
-- path entries should preferably be owned by root (use the chown command to rectify)
+printf "1mEnsuring root PATH integrity: "
+if [ "`echo $PATH | grep :: `" != "" ]; then
+	echo "Empty Directory in PATH (::)"
+fi
+p=`echo $PATH | sed -e 's/::/:/' -e 's/:$//' -e 's/:/ /g'`
+set -- $p
+while [ "$1" != "" ]; do
+	if [ "$1" = "." ]; then
+		echo "PATH contains ."
+		shift
+		continue
+	fi
+
+	if [ -d $1 ]; then
+		perm6=$(ls -ldH $1 | grep "^.....w....")
+		perm9=$(ls -ldH $1 | grep "^........w.")
+		if [ -z "$perm6" ]; then
+			printf "\e[No remediation is needed\e[0m\n"
+		else
+			chmod g=rx /root
+			printf "\e[Remediation has been completed\e[0m\n"
+		fi
+		if [ -z "$perm9" ]; then
+			printf "\e[No remediation is needed\e[0m\n"
+		else
+			chmod o= /root
+			printf "\e[Remediation has been completed\e[0m\n"
+		fi
+		
+		dirown=`ls -ldH $1 | awk '{print $3}'`
+		if [ "$dirown" == "root" ] ; then
+			printf "\e[No remediation is needed\e[0m\n"
+		else
+			chown root /root
+			printf "\e[Remediation has been completed\e[0m\n"
+		fi
+	else
+		printf "\e[31m$1 is not a directory\e[0m\n"
+	fi
+shift
+done
 
 #7.12
-printf "It is recommended that a monitoring policy be established to report user file permissions."
+printf "1mChecking permissions on user home directories: "
+for RESULT in `cat /etc/passwd | egrep -v '(root|halt|sync|shutdown)' |awk -F: '($7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false") { print $6 }'`; do
+resultperm=$(ls -ld $RESULT)
+
+if [[ ` echo $resultperm | grep "^......w..." ` ]]; then 
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod g= $RESULT
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ ` echo $resultperm | grep "^.......-.." `  ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ `echo $resultperm | grep "^........-."` ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ `echo $resultperm | grep "^.........-"` ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+done
 
 #7.13
 printf "It is recommended that a monitoring policy be established to report user dot file permissions."
