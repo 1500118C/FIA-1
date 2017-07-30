@@ -164,12 +164,13 @@ counter=0
 if [[ $issue =~ $regex ]]
 then 
 	counter=$((counter+1))
-	printf "\033[33;31m No remediation needed \n"
+	printf "\e[No remediation is needed\e[0m\n"
 else
 	sed -i '/\m/ d' /etc/issue
 	sed -i '/\r/ d' /etc/issue
 	sed -i '/\s/ d' /etc/issue
 	sed -i '/\v/ d' /etc/issue
+	printf "\e[Remediation has been completed\e[0m\n"
 fi
 echo  -en "\e[0m"
 
@@ -177,12 +178,13 @@ printf "Checking /etc/motd:\n"
 if [[ $motd =~ $regex ]]
 then 
 	counter=$((counter+1))
-	printf "\033[33;31m No remediation needed \n"
+	printf "\e[No remediation is needed\e[0m\n"
 else
 	sed -i '/\m/ d' /etc/motd
 	sed -i '/\r/ d' /etc/motd
 	sed -i '/\s/ d' /etc/motd
 	sed -i '/\v/ d' /etc/motd
+	printf "\e[Remediation has been completed\e[0m\n"
 
 fi
 echo  -en "\e[0m"
@@ -191,12 +193,13 @@ printf "Checking /etc/issue.net:\n"
 if [[ $issuenet =~ $regex ]]
 then 
 	counter=$((counter+1))
-	printf "\033[33;31m FAIL \n"
+	printf "\e[No remediation is needed\e[0m\n"
 else
 	sed -i '/\m/ d' /etc/issue.net
 	sed -i '/\r/ d' /etc/issue.net
 	sed -i '/\s/ d' /etc/issue.net
 	sed -i '/\v/ d' /etc/issue.net
+	printf "\e[Remediation has been completed\e[0m\n"
 fi
 echo  -en "\e[0m"
 
