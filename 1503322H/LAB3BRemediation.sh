@@ -309,15 +309,15 @@ else
 fi
 echo  -en "\e[0m"
 
-mp="Authorized uses only. All activity may be \monitored and reported."
+mp="Authorized uses only. All activity may be \ monitored and reported."
 catissue=$(cat /etc/issue)
 catissuenet=$(cat /etc/issue.net)
 if [ "$catissue" == "$mp" ] && [ "$catissuenet" == "$mp" ]
 then
 	printf "\e[No remediation is needed\e[0m\n"
 else
-	echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue
-	echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue.net
+	echo "Authorized uses only. All activity may be \ monitored and reported." > /etc/issue
+	echo "Authorized uses only. All activity may be \ monitored and reported." > /etc/issue.net
 	counter=$((counter+1))
 	printf "\033[33;31m FAIL \n"
 fi
