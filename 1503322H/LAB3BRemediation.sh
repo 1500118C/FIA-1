@@ -301,12 +301,47 @@ userdel john
 #Therefore, it is recommended that a monitoring policy be established to report user .forward files and determine the action to be taken in accordance with site policy.
 
 #8.1
-touch /etc/motd
-echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue
-echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue.net
-chown root:root /etc/motd; chmod 644 /etc/motd
-chown root:root /etc/issue; chmod 644 /etc/issue
-chown root:root /etc/issue.net; chmod 644 /etc/issue.net
+printf "1mRemediation for Warning banner."
+counter=0
+
+chmodmotd=$( stat --format '%a' /etc/motd)
+chmodissue=$( stat --format '%a' /etc/issue)
+chmodissuenet=$( stat --format '%a' /etc/issue.net)
+#Checks if all files' chmod equals 644
+printf "Checking that /etc/motd /etc/issue /etc/issue.net have chmod of 644 :\n"
+if [ "$chmodmotd" -eq 644 ] && [ "$chmodissue" -eq 644 ] && [ "$chmodissuenet" -eq 644 ]
+then 
+	printf "\e[No remediation is needed\e[0m\n"
+else	
+	chown root:root /etc/motd; chmod 644 /etc/motd
+	chown root:root /etc/issue; chmod 644 /etc/issue
+	chown root:root /etc/issue.net; chmod 644 /etc/issue.net
+	counter=$((counter+1))
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+echo  -en "\e[0m"
+
+mp="Authorized uses only. All activity may be \monitored and reported."
+catissue=$(cat /etc/issue)
+catissuenet=$(cat /etc/issue.net)
+if [ "$catissue" == "$mp" ] && [ "$catissuenet" == "$mp" ]
+then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue
+	echo "Authorized uses only. All activity may be \monitored and reported." > /etc/issue.net
+	counter=$((counter+1))
+	printf "\033[33;31m FAIL \n"
+fi
+echo  -en "\e[0m"
+
+if [ $counter -gt 0 ]; then
+	printf "\e[Remediation required\e[0m\n"
+	printf "Please run remediation\n"
+else
+	printf "\e[No remediation required\e[0m\n"
+fi
+
 
 #8.2
 printf "1mEdit the /etc/motd, /etc/issue and /etc/issue.net files and remove any lines containing \m, \r, \s or \v."
