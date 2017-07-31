@@ -249,7 +249,19 @@ printf "It is recommended that a monitoring policy be established to report user
 #7.15
 #If any users have .rhosts files determine why they have them. These files should be deleted if they are not needed.
 #To search for and remove .rhosts files by using the find(1) command
+printf "1mChecking for presence of user .rhosts files: "
+for dir in `/bin/cat /etc/passwd | /bin/egrep -v '(root|halt|sync|shutdown)' |/bin/awk -F: '($7 != "/sbin/nologin") { print $6 }'`; do
+for file in $dir/.rhosts; do
+if [ ! -h "$file" -a -f "$file" ]; then
 find /export/home -name .rhosts -print | xargs -i -t rm{}
+printf "\eRemediation has been completed \n"
+else
+printf "\eNo remediation needed\e[0m\n"
+fi
+echo  -en "\e[0m"
+done
+done
+
 
 #7.16
 printf "Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
