@@ -264,41 +264,29 @@ done
 
 
 #7.16
-printf "Analyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
+printf "1mAnalyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
 
 #7.17
-#If any users' home directories do not exist, create them and make sure the respective user owns the directory. 
-#Users without assigned home directories should be removed or assigned a home directory as appropriate. 
+printf "1mUsers without assigned home directories should be removed or assigned a home directory as appropriate (E.g. Using userdel)"
 
-useradd john
-mkdir -p /home/john
-chown john:john /home/john
-
-#To remove users
-userdel john
 
 #7.18
-#Based on the results of the script, establish unique UIDs and review all files owned by the shared UID to determine which UID they are supposed to belong to.
+printf "1mEstablish unique UIDs and review all files owned by the shared UID to determine which UID they are supposed to belong to."
 
 #7.19
-#Based on the results of the script, establish unique GIDs and review all files owned by the shared GID to determine which group they are supposed to belong to.
+printf "1mEstablish unique GIDs and review all files owned by the shared GID to determine which group they are supposed to belong to."
 
 #7.20
-#Based on the results of the above, change any UIDs that are in the reserved range to one that is in the user range. 
-#Review all files owned by the reserved UID to determine which UID they are supposed to belong to.
+printf "1mReview all files, determine which UID they are supposed to belong to and change any UIDs that are in the reserved range to one that is in the user range."
 
 #7.21
-#Based on the results of the script, establish unique user names for the users. 
-#File ownerships will automatically reflect the change as long as the users have unique UIDs.
+printf "1mEstablish unique user names for the users."
 
 #7.22
-#Based on the results of the script, establish unique names for the user groups. 
-#File group ownerships will automatically reflect the change as long as the groups have unique GIDs.
-
+printf "1mEstablish unique names for the user groups."
 
 #7.23
-#Making global modifications to users' files without alerting the user community can result in unexpected outages and unhappy users. 
-#Therefore, it is recommended that a monitoring policy be established to report user .forward files and determine the action to be taken in accordance with site policy.
+printf "1mA monitoring policy be established to report user .forward files and determine the action to be taken in accordance with site policy."
 
 #8.1
 printf "1mRemediation for Warning banner."
