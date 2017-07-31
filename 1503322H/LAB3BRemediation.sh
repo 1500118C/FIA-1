@@ -319,7 +319,7 @@ else
 	echo "Authorized uses only. All activity may be \ monitored and reported." > /etc/issue
 	echo "Authorized uses only. All activity may be \ monitored and reported." > /etc/issue.net
 	counter=$((counter+1))
-	printf "\033[33;31m FAIL \n"
+	printf "\e[Remediation has been completed\e[0m\n"
 fi
 echo  -en "\e[0m"
 
