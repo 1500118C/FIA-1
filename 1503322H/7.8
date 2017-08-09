@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#7.8
+printf "1mEnsuring password fields are not empty: "
+PFieldsNEmpty= $(cat /etc/shadow | awk -F: '($2 == "" ) { print $1 " does not have a password "}')
+echo $PFieldsNEmpty
+if [ -z "$PFieldsNEmpty" ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	/usr/bin/passwd -l $1
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
