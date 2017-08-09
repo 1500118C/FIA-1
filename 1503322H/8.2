@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#8.2
+printf "1mEdit the /etc/motd, /etc/issue and /etc/issue.net files and remove any lines containing \m, \r, \s or \v."
+issue=$(egrep '(\\v|\\r|\\m|\\s)' /etc/issue)
+motd=$(egrep '(\\v|\\r|\\m|\\s)' /etc/motd)
+issuenet=$(egrep '(\\v|\\r|\\m|\\s)' /etc/issue.net)
+regex='(\\v|\\r|\\m|\\s)'
+counter=0
+if [[ $issue =~ $regex ]]
+then 
+	counter=$((counter+1))
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i '/\m/ d' /etc/issue
+	sed -i '/\r/ d' /etc/issue
+	sed -i '/\s/ d' /etc/issue
+	sed -i '/\v/ d' /etc/issue
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+echo  -en "\e[0m"
+
+printf "Checking /etc/motd:\n"
+if [[ $motd =~ $regex ]]
+then 
+	counter=$((counter+1))
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i '/\m/ d' /etc/motd
+	sed -i '/\r/ d' /etc/motd
+	sed -i '/\s/ d' /etc/motd
+	sed -i '/\v/ d' /etc/motd
+	printf "\e[Remediation has been completed\e[0m\n"
+
+fi
+echo  -en "\e[0m"
+
+printf "Checking /etc/issue.net:\n"
+if [[ $issuenet =~ $regex ]]
+then 
+	counter=$((counter+1))
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i '/\m/ d' /etc/issue.net
+	sed -i '/\r/ d' /etc/issue.net
+	sed -i '/\s/ d' /etc/issue.net
+	sed -i '/\v/ d' /etc/issue.net
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+echo  -en "\e[0m"
