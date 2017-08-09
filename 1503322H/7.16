@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.16
+printf "1mAnalyze the output of the Verification step on the right and perform the appropriate action to correct any discrepancies found."
