@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#7.12
+printf "1mChecking permissions on user home directories: "
+for RESULT in `cat /etc/passwd | egrep -v '(root|halt|sync|shutdown)' |awk -F: '($7!="/usr/sbin/nologin" && $7!="/sbin/nologin" && $7!="/bin/false") { print $6 }'`; do
+resultperm=$(ls -ld $RESULT)
+
+if [[ ` echo $resultperm | grep "^......w..." ` ]]; then 
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod g= $RESULT
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ ` echo $resultperm | grep "^.......-.." `  ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ `echo $resultperm | grep "^........-."` ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+
+if [[ `echo $resultperm | grep "^.........-"` ]]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+        chmod o= $RESULT
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+done
