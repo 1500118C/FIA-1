@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.13
+printf "It is recommended that a monitoring policy be established to report user dot file permissions."
