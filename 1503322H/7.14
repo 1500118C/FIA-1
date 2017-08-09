@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.14
+printf "It is recommended that a monitoring policy be established to report users’ use of .netrc and .netrc file permissions."
