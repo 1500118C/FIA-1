@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#7.9
+printf "1mVerifying No Legacy "+" Entries Exist in /etc/passwd, /etc/shadow and /etc/group files: "
+LG=$(grep '^+:' /etc/passwd) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
+
+LG=$(grep '^+:' /etc/shadow) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
+
+LG=$(grep '^+:' /etc/group) 
+if [$? -eq 0]; then 
+    #We've found a user
+    echo "We've found the user '+'!"
+    sudo userdel '+'
+    echo "Deleted."
+else
+    echo "Couldn't find the user '+'."
+fi
