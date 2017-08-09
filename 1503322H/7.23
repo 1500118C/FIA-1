@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.23
+printf "1mA monitoring policy be established to report user .forward files and determine the action to be taken in accordance with site policy."
