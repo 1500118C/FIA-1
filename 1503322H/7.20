@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.20
+printf "1mReview all files, determine which UID they are supposed to belong to and change any UIDs that are in the reserved range to one that is in the user range."
