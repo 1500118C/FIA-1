@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#7.7
+printf "1mLocking inactive user accounts: "
+if useradd -D | grep INACTIVE=35 >/dev/null; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	useradd -D -f 35
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
