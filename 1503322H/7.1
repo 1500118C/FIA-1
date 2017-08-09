@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#7.1
+printf "1mSetting Password Expiration Days on /etc/login.defs: "
+maxDays=$(grep ^PASS_MAX_DAYS /etc/login.defs | grep -o '[0-9]*')
+if [ $maxDays -le 90 ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(PASS_MAX_DAYS=\).*,\1'90',' /etc/login.defs
+        printf "\e[Remediation has been completed\e[0m\n"
+fi
+printf "1mSetting Password Expiration Days for all users: "
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "Maximum number" | cut -d : -f 2)
+	if [ $day -le 90 ]; then 
+		printf "\e[No remediation is needed\e[0m\n"
+	else
+		chage --maxdays 90 $i   
+                printf "\e[Remediation has been completed\e[0m\n"
+	fi
+done
