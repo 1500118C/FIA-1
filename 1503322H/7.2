@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#7.2 
+printf "1mSetting Password Change Minumum Days on /etc/login.defs: "
+minDays=$(grep ^PASS_MIN_DAYS /etc/login.defs | grep -o '[0-9]*')
+if [ $minDays -ge 7 ]; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(PASS_MIN_DAYS=\).*,\1'7',' /etc/login.defs
+	printf "\e[Remediation has been completed\e[0m\n"
+fi
+printf "1mSetting Password Change Minimum Days for all users: "
+USER=$(cat /etc/passwd | grep "/bin/bash" | cut -d : -f 1)
+list=(${USER})
+for i in "${list[@]}"
+do
+	day=$(chage -l $i | grep "Minimum number" | cut -d : -f 2)
+	if [ $day -ge 7 ]; then 
+		printf "\e[No remediation is needed\e[0m\n"
+	else
+		chage --mindays 7 $i  
+		printf "\e[Remediation has been completed\e[0m\n"
+	fi
+done
