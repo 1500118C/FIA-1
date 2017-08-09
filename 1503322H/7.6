@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#7.6
+printf "1mSetting default mask for users: "
+if grep "umask 077" /etc/bashrc | grep "umask 077" /etc/profile.d/* >/dev/null; then
+	printf "\e[No remediation is needed\e[0m\n"
+else
+	sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/bashrc
+        sed -i 's,^\(umask 022).*,\1'umask 077',' /etc/profile.d
+	printf "\e[Remediation has been completed\e[0m\n"
+fi 
