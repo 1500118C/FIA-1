@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.17
+printf "1mUsers without assigned home directories should be removed or assigned a home directory as appropriate (E.g. Using userdel)"
