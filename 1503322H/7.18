@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.18
+printf "1mEstablish unique UIDs and review all files owned by the shared UID to determine which UID they are supposed to belong to."
