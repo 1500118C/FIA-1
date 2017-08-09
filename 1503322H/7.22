@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#7.22
+printf "1mEstablish unique names for the user groups."
